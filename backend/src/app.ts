@@ -6,7 +6,8 @@ import express, { json, urlencoded } from 'express'
 import mongoose from 'mongoose'
 import path from 'path'
 import helmet from 'helmet'
-import  csrf from 'csurf'
+
+import rateLimit from 'express-rate-limit'
 import { DB_ADDRESS } from './config'
 import errorHandler from './middlewares/error-handler'
 import serveStatic from './middlewares/serverStatic'
@@ -16,41 +17,38 @@ import routes from './routes'
 const { PORT = 3000 } = process.env
 const app = express()
 
+app.use(
+    rateLimit({
+        windowMs: 15 * 60 * 1000,
+        limit: 60,
+        message: 'Превышен лимит запросов, попробуйте позже',
+        legacyHeaders: false,
+    })
+)
+
+
 app.use(helmet())
 
 app.use(cookieParser())
 
-app.use(cors({ origin: process.env.ORIGIN_ALLOW, credentials: true }))
-app.options('*', cors())
+app.use(
+    cors({
+        origin: process.env.ORIGIN_ALLOW,
+        credentials: true,
+        allowedHeaders: ['Content-Type', 'Authorization', 'X-CSRF-Token'],
+    })
+)
+
 
 // app.use(express.static(path.join(__dirname, 'public')));
 
 app.use(urlencoded({ extended: true }))
 app.use(json())
 
-app.use((req, res, next) => {
-    if (['GET', 'HEAD', 'OPTIONS'].includes(req.method)) {
-        return next()
-    }
-
-    return csrf({
-        cookie: {
-            httpOnly: true,
-            sameSite: 'strict',
-        },
-    })(req, res, next)
-})
-
-app.use((req, res, next) => {
-    if (req.csrfToken) {
-        res.cookie('XSRF-TOKEN', req.csrfToken())
-    }
-    next()
-})
 
 app.use(serveStatic(path.join(__dirname, 'public')))
 
-
+app.options('*', cors())
 app.use(routes)
 app.use(errors())
 app.use(errorHandler)
