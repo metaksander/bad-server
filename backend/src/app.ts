@@ -20,7 +20,9 @@ app.use(helmet())
 
 app.use(cookieParser())
 
-app.use(cors({ origin: true, credentials: true }));
+app.use(cors({ origin: process.env.ORIGIN_ALLOW, credentials: true }))
+app.options('*', cors())
+
 // app.use(express.static(path.join(__dirname, 'public')));
 
 app.use(urlencoded({ extended: true }))
