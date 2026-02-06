@@ -6,8 +6,8 @@ import express, { json, urlencoded } from 'express'
 import mongoose from 'mongoose'
 import path from 'path'
 import helmet from 'helmet'
-
 import rateLimit from 'express-rate-limit'
+import mongoSanitize from 'express-mongo-sanitize'
 import { DB_ADDRESS } from './config'
 import errorHandler from './middlewares/error-handler'
 import serveStatic from './middlewares/serverStatic'
@@ -43,11 +43,11 @@ app.use(
 // app.use(express.static(path.join(__dirname, 'public')));
 
 app.use(urlencoded({ extended: true }))
-app.use(json())
+app.use(json( ))
 
 
 app.use(serveStatic(path.join(__dirname, 'public')))
-
+app.use(mongoSanitize())
 app.options('*', cors())
 app.use(routes)
 app.use(errors())
