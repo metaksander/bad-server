@@ -92,7 +92,11 @@ export const getOrders = async (
         ]
 
         if (search) {
-            const searchRegex = new RegExp(search as string, 'i')
+            const clearSearch = (search as string).replace(
+                /[.*+?^${}()|[\]\\]/g,
+                '\\$&'
+            )
+            const searchRegex = new RegExp(clearSearch as string, 'i')
             const searchNumber = Number(search)
 
             const searchConditions: any[] = [{ 'products.title': searchRegex }]
@@ -309,6 +313,14 @@ export const createOrder = async (
         const totalBasket = basket.reduce((a, c) => a + c.price, 0)
         if (totalBasket !== total) {
             return next(new BadRequestError('Неверная сумма заказа'))
+        }
+
+        if (!phone || typeof phone !== 'string') {
+            return next(new BadRequestError('Телефон обязателен'))
+        }
+
+        if (!/^\+?[0-9\s\-()]{5,30}$/.test(phone)) {
+            return next(new BadRequestError('Телефон некорректный'))
         }
         
         const sanitizedComment = dompurify.sanitize(comment)

@@ -17,12 +17,20 @@ import routes from './routes'
 const { PORT = 3000 } = process.env
 const app = express()
 
+const corsOptions = {
+    origin: process.env.ORIGIN_ALLOW,
+    credentials: true,
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-CSRF-Token'],
+}
+
+
 app.use(
     rateLimit({
         windowMs: 15 * 60 * 1000,
         limit: 60,
         message: 'Превышен лимит запросов, попробуйте позже',
         legacyHeaders: false,
+        standardHeaders: true,
     })
 )
 
@@ -31,13 +39,7 @@ app.use(helmet())
 
 app.use(cookieParser())
 
-app.use(
-    cors({
-        origin: process.env.ORIGIN_ALLOW,
-        credentials: true,
-        allowedHeaders: ['Content-Type', 'Authorization', 'X-CSRF-Token'],
-    })
-)
+app.use(cors(corsOptions))
 
 
 // app.use(express.static(path.join(__dirname, 'public')));
@@ -48,7 +50,7 @@ app.use(json( ))
 
 app.use(serveStatic(path.join(__dirname, 'public')))
 app.use(mongoSanitize())
-app.options('*', cors())
+app.options('*', cors(corsOptions))
 app.use(routes)
 app.use(errors())
 app.use(errorHandler)
