@@ -2,6 +2,7 @@ import { NextFunction, Request, RequestHandler, Response } from 'express'
 import multer, { FileFilterCallback } from 'multer'
 import { join, extname } from 'path'
 import BadRequestError from '../errors/bad-request-error'
+import sharp from 'sharp'
 
 type DestinationCallback = (error: Error | null, destination: string) => void
 type FileNameCallback = (error: Error | null, filename: string) => void
@@ -84,6 +85,26 @@ const checkMinFileSize: RequestHandler = (
     }
 
     next()
+}
+
+const checkImageMetadata: RequestHandler = async (req, _res, next) => {
+    const {file} = req
+
+    if (!file) {
+        return next(new BadRequestError('File not provided'))
+    }
+
+    try {
+        const metadata = await sharp(file.path).metadata()
+
+        if (!metadata.width || !metadata.height) {
+            return next(new BadRequestError('Invalid image metadata'))
+        }
+
+        next()
+    } catch {
+        next(new BadRequestError('Invalid image file'))
+    }
 }
 
 const uploadImage: RequestHandler = (req, res, next) => {
