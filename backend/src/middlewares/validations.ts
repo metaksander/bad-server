@@ -2,7 +2,7 @@ import { Joi, celebrate } from 'celebrate'
 import { Types } from 'mongoose'
 
 // eslint-disable-next-line no-useless-escape
-export const phoneRegExp = /^(\+\d+)?(?:\s|-?|\(?\d+\)?)+$/
+export const phoneRegExp = /^\+?\d[\d\s()-]{3,18}$/
 
 export enum PaymentType {
     Card = 'card',
@@ -35,9 +35,21 @@ export const validateOrderBody = celebrate({
         email: Joi.string().email().required().messages({
             'string.empty': 'Не указан email',
         }),
-        phone: Joi.string().required().pattern(phoneRegExp).messages({
-            'string.empty': 'Не указан телефон',
-        }),
+        phone: Joi.string()
+            .required()
+            .custom((value, helpers) => {
+                const clean = value.replace(/[^\d+]/g, '')
+
+                if (!phoneRegExp.test(clean)) {
+                    return helpers.error('string.invalid')
+                }
+
+                return clean
+            })
+            .messages({
+                'string.empty': 'Не указан телефон',
+                'string.invalid': 'Некорректный формат телефона',
+            }),
         address: Joi.string().required().messages({
             'string.empty': 'Не указан адрес',
         }),
@@ -48,8 +60,6 @@ export const validateOrderBody = celebrate({
     }),
 })
 
-// валидация товара.
-// name и link - обязательные поля, name - от 2 до 30 символов, link - валидный url
 export const validateProductBody = celebrate({
     body: Joi.object().keys({
         title: Joi.string().required().min(2).max(30).messages({

@@ -33,6 +33,11 @@ export const getOrders = async (
 
         const filters: FilterQuery<Partial<IOrder>> = {}
 
+        if (status && typeof status !== 'string') {
+            return next(new BadRequestError('Недопустимый статус заказа'))
+        }
+
+
         if (status && typeof status === 'string') {
             if (!/^[a-zA-Z0-9_-]+$/.test(status)) {
                 return next(new BadRequestError('Недопустимый статус заказа'))
@@ -313,14 +318,6 @@ export const createOrder = async (
         const totalBasket = basket.reduce((a, c) => a + c.price, 0)
         if (totalBasket !== total) {
             return next(new BadRequestError('Неверная сумма заказа'))
-        }
-
-        if (!phone || typeof phone !== 'string') {
-            return next(new BadRequestError('Телефон обязателен'))
-        }
-
-        if (!/^\+?[0-9\s\-()]{5,30}$/.test(phone)) {
-            return next(new BadRequestError('Телефон некорректный'))
         }
         
         const sanitizedComment = dompurify.sanitize(comment)

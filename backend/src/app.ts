@@ -20,9 +20,26 @@ const app = express()
 const corsOptions = {
     origin: process.env.ORIGIN_ALLOW,
     credentials: true,
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-CSRF-Token'],
 }
 
+app.use(
+    helmet({
+        crossOriginResourcePolicy: false,
+    })
+)
+
+app.use(cookieParser())
+
+app.use(cors(corsOptions))
+// app.use(express.static(path.join(__dirname, 'public')));
+
+app.use(urlencoded({ extended: true, limit: '1mb' }))
+app.use(json({ limit: '1mb' }))
+
+
+app.use(serveStatic(path.join(__dirname, 'public')))
+app.use(mongoSanitize())
+app.options('*', cors(corsOptions))
 
 app.use(
     rateLimit({
@@ -33,24 +50,6 @@ app.use(
         standardHeaders: true,
     })
 )
-
-
-app.use(helmet())
-
-app.use(cookieParser())
-
-app.use(cors(corsOptions))
-
-
-// app.use(express.static(path.join(__dirname, 'public')));
-
-app.use(urlencoded({ extended: true }))
-app.use(json( ))
-
-
-app.use(serveStatic(path.join(__dirname, 'public')))
-app.use(mongoSanitize())
-app.options('*', cors(corsOptions))
 app.use(routes)
 app.use(errors())
 app.use(errorHandler)

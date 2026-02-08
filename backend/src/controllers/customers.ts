@@ -28,6 +28,7 @@ export const getCustomers = async (
             orderCountTo,
             search,
         } = req.query
+        
 
         const filters: FilterQuery<Partial<IUser>> = {}
 
