@@ -88,7 +88,7 @@ const checkMinFileSize: RequestHandler = (
 }
 
 const checkImageMetadata: RequestHandler = async (req, _res, next) => {
-    const {file} = req
+    const { file } = req
 
     if (!file) {
         return next(new BadRequestError('File not provided'))
@@ -110,8 +110,12 @@ const checkImageMetadata: RequestHandler = async (req, _res, next) => {
 const uploadImage: RequestHandler = (req, res, next) => {
     upload.single('file')(req, res, (err) => {
         if (err) return next(err)
-        checkMinFileSize(req, res, next)
+        checkMinFileSize(req, res, async (err) => {
+            if (err) return next(err)
+
+            await checkImageMetadata(req, res, next)
+        })
     })
 }
 
-export default uploadImage;
+export default uploadImage
